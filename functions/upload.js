@@ -2,21 +2,7 @@ import { errorHandling, telemetryData } from "./utils/middleware";
 
 export async function onRequestPost(context) {
     const { request, env } = context;
-
-const adminPassword = env.BASIC_PASS;
-
-    if (adminPassword) {
-        const userPassword = request.headers.get('Authorization');
-        if (userPassword !== adminPassword) {
-            return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-                status: 403,
-                headers: { 'Content-Type': 'application/json' }
-            });
-        }
-    }
-
-}
-  
+ 
     try {
         const clonedRequest = request.clone();
         const formData = await clonedRequest.formData();
