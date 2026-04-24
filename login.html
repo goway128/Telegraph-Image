@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>访问验证</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #0d0d0d;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    .card {
+      background: #161616;
+      border: 1px solid #2a2a2a;
+      border-radius: 16px;
+      padding: 44px 40px;
+      width: 340px;
+      text-align: center;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+    }
+
+    .icon {
+      font-size: 40px;
+      margin-bottom: 12px;
+    }
+
+    h1 {
+      color: #f0f0f0;
+      font-size: 20px;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+
+    p.sub {
+      color: #666;
+      font-size: 13px;
+      margin-bottom: 28px;
+    }
+
+    input[type="password"] {
+      width: 100%;
+      padding: 11px 15px;
+      border-radius: 9px;
+      border: 1px solid #333;
+      background: #0f0f0f;
+      color: #f0f0f0;
+      font-size: 15px;
+      outline: none;
+      transition: border-color 0.2s;
+      margin-bottom: 12px;
+    }
+
+    input[type="password"]:focus {
+      border-color: #4f8ef7;
+    }
+
+    input[type="password"].error {
+      border-color: #e05050;
+      animation: shake 0.3s ease;
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-6px); }
+      75% { transform: translateX(6px); }
+    }
+
+    button {
+      width: 100%;
+      padding: 11px;
+      border-radius: 9px;
+      border: none;
+      background: #4f8ef7;
+      color: #fff;
+      font-size: 15px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.2s, opacity 0.2s;
+    }
+
+    button:hover { background: #3a7de0; }
+    button:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    .err-msg {
+      color: #e05050;
+      font-size: 13px;
+      margin-top: 12px;
+      min-height: 18px;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="icon">🔒</div>
+    <h1>访问验证</h1>
+    <p class="sub">请输入密码以继续使用</p>
+    <input type="password" id="pwd" placeholder="请输入密码" autofocus />
+    <button id="btn">确认</button>
+    <p class="err-msg" id="err"></p>
+  </div>
+
+  <script>
+    const input = document.getElementById("pwd");
+    const btn = document.getElementById("btn");
+    const err = document.getElementById("err");
+
+    async function login() {
+      const password = input.value.trim();
+      if (!password) return;
+
+      btn.disabled = true;
+      btn.textContent = "验证中…";
+      err.textContent = "";
+      input.classList.remove("error");
+
+      try {
+        const res = await fetch("/api/auth", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ password }),
+        });
+        const data = await res.json();
+
+        if (data.ok) {
+          // 登录成功，跳转首页
+          const redirect = new URLSearchParams(location.search).get("from") || "/";
+          location.href = redirect;
+        } else {
+          err.textContent = data.msg || "密码错误，请重试";
+          input.classList.add("error");
+          input.value = "";
+          input.focus();
+        }
+      } catch (e) {
+        err.textContent = "网络错误，请刷新重试";
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "确认";
+      }
+    }
+
+    btn.addEventListener("click", login);
+    input.addEventListener("keydown", (e) => e.key === "Enter" && login());
+  </script>
+</body>
+</html>
