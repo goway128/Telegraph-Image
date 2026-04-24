@@ -1,16 +1,4 @@
-/**
- * _middleware.js — 全局中间件
- * 拦截所有 HTML 页面请求，未登录则重定向到 /login.html
- */
-
-// 不需要验证的路径
-const PUBLIC_PATHS = [
-  "/login.html",
-  "/api/auth",
-  "/favicon.ico",
-  "/bg.svg",
-  "/music.svg",
-];
+/** * _middleware.js — 全局中间件 * 拦截所有 HTML 页面请求，未登录则重定向到 /login.html */
 
 export async function onRequest(context) {
   const { request, env, next } = context;
@@ -23,14 +11,16 @@ export async function onRequest(context) {
     return next();
   }
 
-  // 公开路径放行
-  if (PUBLIC_PATHS.some((p) => path === p || path.startsWith(p))) {
+  // ✅ 登录页和认证接口：直接放行，绝不拦截
+  if (path === "/login.html" || path.startsWith("/api/auth")) {
     return next();
   }
 
-  // 静态资源放行（非 HTML）
+  // ✅ 所有静态资源放行
   if (
-    path.match(/\.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|json)$/)
+    path.match(
+      /\.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|json|txt|webp)$/
+    )
   ) {
     return next();
   }
@@ -54,7 +44,10 @@ export async function onRequest(context) {
     });
   }
 
-  return Response.redirect(`${url.origin}/login.html`, 302);
+  return Response.redirect(
+    `${url.origin}/login.html?from=${encodeURIComponent(path)}`,
+    302
+  );
 }
 
 function parseCookie(cookieStr, name) {
